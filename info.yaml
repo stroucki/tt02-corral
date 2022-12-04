@@ -31,10 +31,10 @@ documentation:
   inputs:               # a description of what the inputs do
     - clock
     - reset
-    - move0		# bit 0 of move
-    - move1		# bit 1 of move
-    - move2		# bit 2 of move
-    - enter		# submit move
+    - move0             # bit 0 of move
+    - move1             # bit 1 of move
+    - move2             # bit 2 of move
+    - enter             # submit move
     - none
     - none
   outputs:
