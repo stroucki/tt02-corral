@@ -4,7 +4,7 @@
 
 `default_nettype none
 
-module game;
+module game
   (input logic clock,
   input logic reset_n,
   input logic enter,

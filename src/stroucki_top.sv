@@ -4,7 +4,7 @@
 
 `default_nettype none
 
-module stroucki_top;
+module stroucki_top
   (input logic clock,
   input logic reset,
   input logic [2:0] move,
