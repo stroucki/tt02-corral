@@ -20,7 +20,7 @@ documentation:
   author:       "Michael Stroucken"      # Your name
   discord:      "stroucki"      # Your discord handle
   title:        "Corral"      # Project title
-  description:  ""      # Short description of what your project does
+  description:  "Implements the Corral game from Basic Computer Games vol 2"      # Short description of what your project does
   how_it_works: ""      # Longer description of how the project works
   how_to_test:  ""      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
   external_hw:  ""      # Describe any external hardware needed
