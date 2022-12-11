@@ -5,14 +5,17 @@
 `default_nettype none
 
 module stroucki_top
-  (input logic clock,
-  input logic reset,
-  input logic [2:0] move,
-  input logic enter,
-  output logic [3:0] data,
-  output logic gameover,
-  output logic lostwon,
-  output logic ready);
+  (input logic [7:0] io_in,
+  output logic [7:0] io_out);
+
+  // assign inputs
+  logic clock, reset, enter;
+  logic [2:0] move;
+  assign {enter, move, reset, clock} = io_in;
+  // assign outputs
+  logic ready, lostwon, gameover;
+  logic [3:0] data;
+  assign io_out = {ready, lostwon, gameover, data};
 
   typedef enum logic [2:0] {COWBOY, HORSE, GAME, IDLE} state_t;
   state_t state = IDLE, nextState;
@@ -46,50 +49,31 @@ module stroucki_top
         begin
           gameenter = 1;
           gamemove = move;
+          nextState = COWBOY;
         end
-      COWBOY: ;
-      HORSE: ;
-      GAME: ;
-      
-    endcase
-  end
-
-  // next state logic
-  always_comb
-    unique case (state)
-      IDLE: nextState = IDLE;
+        else nextState = IDLE;
       COWBOY: nextState = HORSE;
       HORSE: nextState = GAME;
-      GAME: nextState = COWBOY;
+      GAME: if (enter)
+        begin
+          nextState = COWBOY;
+        end
+        else nextState = IDLE;
     endcase
+  end
 
   always @(posedge clock, negedge reset_n) begin
     if (~reset_n) begin
       state <= IDLE;
       data <= 4'b0;
       gameover <= 1;
-      lastwon <= 0;
-      ready <= 0;
     end
     else begin
-      if (enter && state == IDLE) begin
-        state <= HORSE;
-      end
-      else if (state == GAME) begin
-        ready <= 1;
-        lostwon <= gamelostwon;
-        gameover <= gamegameover;
-        if (gameready) begin
-          state <= IDLE;
-        end
-      end
-      else if (state == COWBOY) begin
-        data <= cowboypos;
-        state <= nextState;
-      else if (state == HORSE) begin
-        data <= horsepos;
-        state <= nextState;
-      end
+      gameover <= gamegameover;
+      ready <= gameready;
+      lostwon <= gamelostwon;
+      ready <= gameready;
+
     end
   end
 

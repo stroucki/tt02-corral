@@ -9,8 +9,8 @@ module game
   input logic reset_n,
   input logic enter,
   input logic [2:0] move,
-  output logic [3:0] cowboypos,
-  output logic [3:0]  horsepos,
+  output logic [3:0] cowboyPos,
+  output logic [3:0]  horsePos,
   output logic gameover,
   output logic lostwon,
   output logic ready);
@@ -21,28 +21,25 @@ module game
   logic [3:0] horsepos;
   logic [3:0] cowboypos;
 
-  logic gameenter, gamegameover, gamelostwon, gameready;
-  logic [2:0] gamemove;
-
-
-  logic reset_n;
-  assign reset_n =  !reset;
+  logic targetGameover, targetLostwon, targetReady;
+  logic [2:0] targetKickflight, targetKickcount, targetMove, targetCowboyHitpoints;
+  logic [3:0] targetCowboypos, targetHorsepos;
 
   // need random numbers 0 to 9,
   // 3 bits + 2 bits?
   logic [4:0] lfsrout;
-  lfsr #(5) lfsrinstance(.i_Clk(clock), .i_Enable(1'b0),
+  LFSR #(5) lfsrinstance(.i_Clk(clock), .i_Enable(1'b0),
     .o_LFSR_Data(lfsrout));
 
-  logic [3:0] p[10] = { 4'd0, 4'd1, 4'd2, 4'd3, 4'd3, 4'd2, 4'd2, 4'd1, 4'd0, 4'd-1 };
-  logic [3:0] q[10] = { 4'd1, 4'd2, 4'd3, 4'd4, 4'd5, 4'd4, 4'd3, 4'd2, 4'd1, 4'd0 };
+  logic [30:0] p = { 4'd0, 4'd1, 4'd2, 4'd3, 4'd3, 4'd2, 4'd2, 4'd1, 4'd0, -4'd1 };
+  logic [30:0] q = { 4'd1, 4'd2, 4'd3, 4'd4, 4'd5, 4'd4, 4'd3, 4'd2, 4'd1, 4'd0 };
 
   logic [3:0] pVal, qVal;
   logic [4:0] randomVal;
 
   //sequential
   // arena limited to 16
-  logic [2:0] kickflight, kickcount, cowboyHitpoints
+  logic [2:0] kickflight, kickcount, cowboyHitpoints;
 /*
   register #(4) cowboyposreg(.clock(clock), .reset_n(reset_n),
     .ld_n(loadCowboypos_n), .cl_n(1'b1), .in(targetCowboypos),
@@ -62,13 +59,13 @@ module game
   // not counting rounds
   logic kickdead;
   logic [3:0] distance;
-  logic coyboyLeftOfHorse;
+  logic cowboyLeftOfHorse;
   
 
   // set up random values
-  assign randomval = lfsrout[4:2] + lfsrout[1:0];
-  assign pVal = p[randomval];
-  assign qVal = q[randomval];
+  assign randomVal = lfsrout[4:2] + lfsrout[1:0];
+  assign pVal = p[randomVal << 4 +: 4];
+  assign qVal = q[randomVal << 4 +: 4];
 
   function automatic integer cowboyDest;
     input cowboyLeftOfHorse;
@@ -81,9 +78,11 @@ module game
     input cowboyLeftOfHorse;
     input [3:0] cowboyPos;
     input [3:0] move;
-    integer dest = cowboyDest(cowboyLeftOfHorse, cowboyPos, move);
-    if (dest > 0 && dest < 16) return 1;
-    return 0;
+    integer dest;
+    dest = cowboyPos + (cowboyLeftOfHorse? move : - move);
+    if (dest > 0 && dest < 16) begin
+      cowboyInBound = 1;
+    end else cowboyInBound = 0;
   endfunction
 
   function automatic boundHorse;
@@ -103,6 +102,7 @@ module game
     targetHorsepos = horsepos;
     targetLostwon = lostwon;
     targetMove = move;
+    targetCowboyHitpoints = cowboyHitpoints;
     targetReady = 0;
     kickdead = (kickcount > cowboyHitpoints);
     // used for game decision, so should be next values
@@ -118,11 +118,9 @@ module game
           nextState = IDLE;
           targetReady = 1;
         end
-      SETUP: nextState = IDLE;
       WAIT: if (enter) begin
           nextState = WAIT;
         end else nextState = IDLE;
-        end
       KICK: if (kickdead)
         begin
           targetGameover = 1;
@@ -141,12 +139,13 @@ module game
         end
       GAME: begin
         targetCowboypos = cowboyDest(cowboyLeftOfHorse, cowboyPos, move);
-        targetHorsepos = boundHorse(horsepos + (cowboyLeftOfHorse ? pVal : -pVal);
+        targetHorsepos = boundHorse(horsepos + (cowboyLeftOfHorse ? pVal : -pVal));
 	if (distance < (move << 1) && distance > 1) begin
           // bolt
           // was 9 + 2*pVal
-          integer boltStrength = 4'd5 + (pVal << 1);
-          targetHorsePos = boundHorse(horsePos + (cowboyLeftOfHorse ? (pVal + 1) : -(pVal + 1)));
+          integer boltStrength;
+          boltStrength =  4'd5 + (pVal << 1);
+          targetHorsepos = boundHorse(horsePos + (cowboyLeftOfHorse ? (pVal + 1) : -(pVal + 1)));
           nextState = WAIT;
         end
         // somewhat strange conditioning around this
@@ -166,28 +165,26 @@ module game
           targetKickcount++;
           targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? 5 : -5));
           nextState = KICK;
-
         end
+      end
+      SETUP: begin
+        targetGameover = 1;
+        targetCowboypos <= 4'd0;
+        targetKickflight <= 3'd0;
+        targetKickcount <= 3'd0;
+        targetCowboyHitpoints <= 3'd2 + pVal;
+        // was 13
+        targetHorsepos = 4'd10 + (randomVal > 5 ? qVal : -qVal);
+        nextState = WAIT;
+      end
       endcase
     end
-
-       
-        
 
   // state transition  
   always @(posedge clock, negedge reset_n) begin
     if (~reset_n) begin
       lostwon <= 1;
-    end
-    if (~reset_n || state == SETUP) begin
-      state <= WAIT;
-      gameover <= 1;
-      cowboypos <= 4'd0;
-      kickflight <= 3'd0;
-      kickcount <= 3'd0;
-      cowboyHitpoints <= 3'd2 + pVal;
-      // was 13
-      horsepos <= 4'd10 + (randomval > 5 ? qVal : -qVal);
+      state <= SETUP;
     end
     else begin
       state <= nextState;
@@ -197,6 +194,7 @@ module game
       cowboypos <= targetCowboypos;
       horsepos <= targetHorsepos;
       lostwon <= targetLostwon;
+      cowboyHitpoints <= targetCowboyHitpoints;
     end
   end
 
