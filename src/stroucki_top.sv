@@ -47,9 +47,9 @@ module stroucki_top
           gameenter = 1;
           gamemove = move;
         end
-      COWBOY:
-      HORSE:
-      GAME:
+      COWBOY: ;
+      HORSE: ;
+      GAME: ;
       
     endcase
   end
