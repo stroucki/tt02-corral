@@ -34,7 +34,7 @@ module stroucki_top
   assign reset_n =  !reset;
 
   game gameinstance(.clock(clock), .reset_n(reset_n),
-    .cowboypos(cowboypos), .horsepos(horsepos), .gameover(gamegameover),
+    .cowboyPos(cowboypos), .horsePos(horsepos), .gameover(gamegameover),
     .lostwon(gamelostwon), .ready(gameready), .enter(gameenter),
     .move(gamemove));
 

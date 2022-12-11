@@ -10,7 +10,7 @@ module game
   input logic enter,
   input logic [2:0] move,
   output logic [3:0] cowboyPos,
-  output logic [3:0]  horsePos,
+  output logic [3:0] horsePos,
   output logic gameover,
   output logic lostwon,
   output logic ready);
