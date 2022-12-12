@@ -144,8 +144,11 @@ module game
           // bolt
           // was 9 + 2*pVal
           integer boltStrength;
-          boltStrength =  4'd5 + (pVal << 1);
-          targetHorsepos = boundHorse(horsePos + (cowboyLeftOfHorse ? (pVal + 1) : -(pVal + 1)));
+          boltStrength = 4'd5 + (pVal << 1);
+          targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? boltStrength : -boltStrength));
+	  if (distance < 1) begin
+            targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? 4'd3 : -4'd3));
+          end
           nextState = WAIT;
         end
         // somewhat strange conditioning around this
@@ -163,7 +166,7 @@ module game
         else begin
           targetKickflight = pVal + 3'd2;
           targetKickcount++;
-          targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? 5 : -5));
+          targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? 4'd5 : -4'd5));
           nextState = KICK;
         end
       end
