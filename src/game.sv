@@ -94,6 +94,15 @@ module game
     boundHorse = targetHorsePos;
   endfunction
 
+  function automatic integer boltDest;
+    input cowboyLeftOfHorse;
+    input [3:0] horsePos;
+    // was 9 + 2*pVal
+    integer boltStrength;
+    boltStrength = 4'd5 + (pVal << 1);
+    boltDest = horsePos - (cowboyLeftOfHorse ? boltStrength : -boltStrength);
+  endfunction
+
   always_comb begin
     targetGameover = gameover;
     targetKickflight = kickflight;
@@ -142,10 +151,7 @@ module game
         targetHorsepos = boundHorse(horsepos + (cowboyLeftOfHorse ? pVal : -pVal));
 	if (distance < (move << 1) && distance > 1) begin
           // bolt
-          // was 9 + 2*pVal
-          integer boltStrength;
-          boltStrength = 4'd5 + (pVal << 1);
-          targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? boltStrength : -boltStrength));
+          targetHorsepos = boundHorse(boltDest(cowboyLeftOfHorse, horsePos));
 	  if (distance < 1) begin
             targetHorsepos = boundHorse(horsePos - (cowboyLeftOfHorse ? 4'd3 : -4'd3));
           end
