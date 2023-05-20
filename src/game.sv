@@ -178,7 +178,7 @@ module game
         end
       end
       SETUP: begin
-        targetGameover = 1;
+        targetGameover = 0;
         targetCowboypos = 4'd0;
         targetKickflight = 3'd0;
         targetKickcount = 3'd0;
@@ -197,6 +197,7 @@ module game
       ready <= 0;
       cowboyPos <= 0;
       horsePos <= 0;
+      gameover <= 0;
       state <= SETUP;
     end
     else begin

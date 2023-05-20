@@ -15,7 +15,7 @@ module stroucki_top
   // assign outputs
   logic ready, lostwon, gameover;
   logic [3:0] data, nextData;
-  assign io_out = {ready, lostwon, gameover, data};
+  assign io_out = {1'bx, ready, lostwon, gameover, data};
 
   typedef enum logic [2:0] {COWBOY, HORSE, GAME, IDLE} state_t;
   state_t state = IDLE, nextState;
